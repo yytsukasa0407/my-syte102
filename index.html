@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>わくわく わりざん練習</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&display=swap');
+        
+        body {
+            font-family: 'Kiwi Maru', serif;
+            background-color: #f0fdf4; /* Light green */
+            touch-action: manipulation;
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .correct-pop {
+            animation: pop 0.5s ease-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); color: #f59e0b; }
+            100% { transform: scale(1); }
+        }
+
+        .keypad-btn {
+            transition: transform 0.1s, background-color 0.1s;
+        }
+        .keypad-btn:active {
+            transform: scale(0.9);
+            background-color: #e2e8f0;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+<div id="game-container" class="max-w-md w-full bg-white rounded-[2.5rem] shadow-xl border-8 border-green-200 overflow-hidden relative">
+    
+    <!-- Header/Score -->
+    <div class="bg-green-100 p-4 flex justify-between items-center border-b-4 border-green-200">
+        <div class="text-green-700 font-bold text-lg flex items-center gap-2">
+            <span class="text-2xl">🌟</span> <span id="score">0</span>
+        </div>
+        <div class="text-green-700 font-bold">
+            のこり: <span id="remaining">10</span>
+        </div>
+    </div>
+
+    <!-- Main Question Area -->
+    <div id="main-area" class="p-8 text-center min-h-[250px] flex flex-col justify-center items-center">
+        <div id="question-box" class="flex items-center justify-center gap-4 mb-4">
+            <div id="num1" class="text-6xl md:text-7xl font-bold text-slate-700">12</div>
+            <div class="text-5xl md:text-6xl font-bold text-green-500">÷</div>
+            <div id="num2" class="text-6xl md:text-7xl font-bold text-slate-700">3</div>
+            <div class="text-5xl md:text-6xl font-bold text-green-500">=</div>
+            <div id="answer-display" class="w-16 h-16 md:w-20 md:h-20 bg-slate-100 rounded-2xl flex items-center justify-center text-5xl font-bold text-indigo-600 border-b-4 border-slate-300">
+                ?
+            </div>
+        </div>
+        <div id="feedback" class="h-8 text-xl font-bold"></div>
+    </div>
+
+    <!-- Custom Keypad -->
+    <div class="bg-slate-50 p-4 grid grid-cols-3 gap-3 border-t-4 border-slate-100">
+        <button onclick="inputNumber(1)" class="keypad-btn py-4 bg-white rounded-2xl shadow-sm text-2xl font-bold border-b-4 border-slate-200">1</button>
+        <button onclick="inputNumber(2)" class="keypad-btn py-4 bg-white rounded-2xl shadow-sm text-2xl font-bold border-b-4 border-slate-200">2</button>
+        <button onclick="inputNumber(3)" class="keypad-btn py-4 bg-white rounded-2xl shadow-sm text-2xl font-bold border-b-4 border-slate-200">3</button>
+        <button onclick="inputNumber(4)" class="keypad-btn py-4 bg-white rounded-2xl shadow-sm text-2xl font-bold border-b-4 border-slate-200">4</button>
+        <button onclick="inputNumber(5)" class="keypad-btn py-4 bg-white rounded-2xl shadow-sm text-2xl font-bold border-b-4 border-slate-200">5</button>
+        <button onclick="inputNumber(6)" class="keypad-btn py-4 bg-white rounded-2xl shadow-sm text-2xl font-bold border-b-4 border-slate-200">6</button>
+        <button onclick="inputNumber(7)" class="keypad-btn py-4 bg-white rounded-2xl shadow-sm text-2xl font-bold border-b-4 border-slate-200">7</button>
+        <button onclick="inputNumber(8)" class="keypad-btn py-4 bg-white rounded-2xl shadow-sm text-2xl font-bold border-b-4 border-slate-200">8</button>
+        <button onclick="inputNumber(9)" class="keypad-btn py-4 bg-white rounded-2xl shadow-sm text-2xl font-bold border-b-4 border-slate-200">9</button>
+        <button onclick="clearAnswer()" class="keypad-btn py-4 bg-orange-100 rounded-2xl shadow-sm text-lg font-bold border-b-4 border-orange-200 text-orange-600">やりなおし</button>
+        <button onclick="inputNumber(0)" class="keypad-btn py-4 bg-white rounded-2xl shadow-sm text-2xl font-bold border-b-4 border-slate-200">0</button>
+        <button onclick="checkAnswer()" class="keypad-btn py-4 bg-indigo-500 rounded-2xl shadow-sm text-lg font-bold border-b-4 border-indigo-700 text-white">けってい</button>
+    </div>
+</div>
+
+<!-- Result Modal (Hidden by default) -->
+<div id="result-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-[3rem] p-8 max-w-sm w-full text-center shadow-2xl border-8 border-yellow-200">
+        <div class="text-6xl mb-4">🏆</div>
+        <h2 class="text-3xl font-bold text-slate-800 mb-2">よくがんばったね！</h2>
+        <p class="text-slate-500 mb-6">ぜんぶ正解（せいかい）しました！</p>
+        <button onclick="resetGame()" class="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-2xl text-xl font-bold border-b-4 border-green-700 transition-colors">
+            もういちど あそぶ
+        </button>
+    </div>
+</div>
+
+<script>
+    let currentAnswer = "";
+    let correctAnswer = 0;
+    let score = 0;
+    let questionCount = 0;
+    const maxQuestions = 10;
+
+    const num1El = document.getElementById('num1');
+    const num2El = document.getElementById('num2');
+    const answerDisplay = document.getElementById('answer-display');
+    const feedback = document.getElementById('feedback');
+    const scoreEl = document.getElementById('score');
+    const remainingEl = document.getElementById('remaining');
+    const gameContainer = document.getElementById('game-container');
+    const resultModal = document.getElementById('result-modal');
+
+    // Generate a division problem that is an inverse of multiplication (1-9 tables)
+    function generateQuestion() {
+        const a = Math.floor(Math.random() * 9) + 1; // Divisor (1-9)
+        const b = Math.floor(Math.random() * 9) + 1; // Quotient (1-9)
+        const c = a * b; // Dividend
+
+        num1El.textContent = c;
+        num2El.textContent = a;
+        correctAnswer = b;
+        
+        currentAnswer = "";
+        answerDisplay.textContent = "?";
+        answerDisplay.classList.remove('text-indigo-600');
+        answerDisplay.classList.add('text-slate-400');
+        feedback.textContent = "";
+    }
+
+    function inputNumber(n) {
+        if (currentAnswer.length < 2) {
+            currentAnswer += n;
+            answerDisplay.textContent = currentAnswer;
+            answerDisplay.classList.remove('text-slate-400');
+            answerDisplay.classList.add('text-indigo-600');
+        }
+    }
+
+    function clearAnswer() {
+        currentAnswer = "";
+        answerDisplay.textContent = "?";
+        answerDisplay.classList.add('text-slate-400');
+    }
+
+    function checkAnswer() {
+        if (currentAnswer === "") return;
+
+        const userAns = parseInt(currentAnswer);
+        
+        if (userAns === correctAnswer) {
+            // Correct
+            feedback.innerHTML = '<span class="text-orange-500">✨ せいかい！ ✨</span>';
+            answerDisplay.classList.add('correct-pop');
+            score++;
+            scoreEl.textContent = score;
+            
+            setTimeout(() => {
+                answerDisplay.classList.remove('correct-pop');
+                questionCount++;
+                remainingEl.textContent = maxQuestions - questionCount;
+                
+                if (questionCount >= maxQuestions) {
+                    showResults();
+                } else {
+                    generateQuestion();
+                }
+            }, 1000);
+        } else {
+            // Incorrect
+            feedback.innerHTML = '<span class="text-red-500">ざんねん！ もう一回</span>';
+            gameContainer.classList.add('shake');
+            setTimeout(() => {
+                gameContainer.classList.remove('shake');
+                clearAnswer();
+            }, 500);
+        }
+    }
+
+    function showResults() {
+        resultModal.classList.remove('hidden');
+    }
+
+    function resetGame() {
+        score = 0;
+        questionCount = 0;
+        scoreEl.textContent = "0";
+        remainingEl.textContent = maxQuestions;
+        resultModal.classList.add('hidden');
+        generateQuestion();
+    }
+
+    // Initialize
+    window.onload = generateQuestion;
+</script>
+
+</body>
+</html>
